@@ -1,0 +1,25 @@
+QWidget {
+    padding: 0;
+}
+
+QLineEdit {
+    padding: 0;
+}
+
+QLabel {
+    padding: 0;
+}
+
+QPushButton {
+    padding: 0;
+}
+
+QTabWidget::tab-bar {
+}
+
+QTabBar::tab {
+    padding: 0;
+}
+
+QTabBar::tab:selected {
+}
