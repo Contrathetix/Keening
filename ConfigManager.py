@@ -10,34 +10,34 @@ class ConfigManager(QtCore.QObject):
 
     pathModsChanged = QtCore.pyqtSignal()
 
-    def __init__(self, main):
+    def __init__(self, backend, filePath):
         super(ConfigManager, self).__init__()
-        self.main = main
+        self.backend = backend
         self.valueMap = {
-            "sPathGame": "Morrowind",
-            "sPathMods": "Mods",
-            "sPathData": "Data",
+            "sPathGame": "game",
+            "sPathMods": "mods",
+            "sPathData": "data",
             "iGuiWidth": 1000,
             "iGuiHeight": 600
         }
-        self.initValues()
-        self.initDirs()
-        self.initData()
+        # self.initValues()
+        # self.initDirs()
+        # self.initData()
 
     def initValues(self):
-        self.main.log(self, 0, "Reading config data from ini...")
+        self.backend.log(self, 0, "Reading config data from ini...")
         tempMap = self.parseIni("Keening.ini", True)
         for key in tempMap.keys():
             self.valueMap[key] = tempMap[key]
-        self.main.log(self, 0, "Config data reading finished")
+        self.backend.log(self, 0, "Config data reading finished")
 
     def initDirs(self):
         try:
-            self.main.pathManager.makePath(self.getPathMods(), create=True)
-            self.main.pathManager.makePath(self.getPathGame(), create=True)
-            self.main.pathManager.makePath(self.getPathData(), create=True)
+            self.backend.pathManager.makePath(self.getPathMods(), create=True)
+            self.backend.pathManager.makePath(self.getPathGame(), create=True)
+            self.backend.pathManager.makePath(self.getPathData(), create=True)
         except Exception as exc:
-            self.main.log(self, 1, str(exc))
+            self.backend.log(self, 1, str(exc))
 
     def getGuiSize(self):
         return Qt.QSize(self.valueMap["iGuiWidth"], self.valueMap["iGuiHeight"])

@@ -3,7 +3,6 @@
 import os
 import sys
 import time
-import shutil
 import subprocess
 
 
@@ -99,9 +98,10 @@ class SpecFile(object):
 class PackageCreator(object):
     def __init__(self):
         super(PackageCreator, self).__init__()
+        self.assetDir = "assets"
         self.upxPath = None
         self.specFile = SpecFile("Keening.py")
-        print("Keening Executable Package Creator")
+        print("-" * 50 + "\nKeening Executable Package Creator\n" + "-" * 50)
         self.cleanup()
         # self.upxPath = "C:\\Program Files\\UPX"
         self.specFile.setUPX(False)
@@ -109,6 +109,7 @@ class PackageCreator(object):
         self.includePaths()
         self.specFile.writeToFile()
         self.runPyinstaller()
+        self.cleanup()
         time.sleep(0.5)
         print("Finished.\n")
         time.sleep(1.0)
@@ -128,8 +129,8 @@ class PackageCreator(object):
     def includeResources(self):
         time.sleep(0.5)
         print("Collecting resource list...")
-        self.listResources("Resource")
-        self.specFile.setIcon("Resource\\icon.ico")
+        self.listResources(self.assetDir)
+        self.specFile.setIcon(os.path.join(self.assetDir, "icon.ico"))
         time.sleep(0.5)
         print("Done.")
 
@@ -142,17 +143,8 @@ class PackageCreator(object):
 
     def cleanup(self):
         time.sleep(0.5)
-        print("Cleaning up old files...")
-        l = ["build", "dist", "Keening.spec"]
-        for f in l:
-            if len(f.split(".")) < 2 and os.path.isdir(f):
-                time.sleep(0.5)
-                shutil.rmtree(f)
-                print("\tRemoved \"" + f + "\"")
-            elif os.path.isfile(f):
-                time.sleep(0.5)
-                os.unlink(f)
-                print("\tRemoved \"" + f + "\"")
+        print("Cleaning up...")
+        subprocess.call("resources\\cleanup.bat")
         time.sleep(0.5)
         print("Done.")
 
@@ -174,4 +166,5 @@ class PackageCreator(object):
 
 
 if __name__ == "__main__":
+    os.chdir("..")
     PackageCreator()
