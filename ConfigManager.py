@@ -11,7 +11,7 @@ class ConfigManager(QtCore.QObject):
     pathModsChanged = QtCore.pyqtSignal()
 
     def __init__(self, backend, filePath):
-        super(ConfigManager, self).__init__()
+        super(ConfigManager, self).__init__(backend)
         self.backend = backend
         self.valueMap = {
             "sPathGame": "game",

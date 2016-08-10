@@ -6,7 +6,7 @@ import PyQt5.QtCore as QtCore
 class KeeningCmd(QtCore.QObject):
 
     def __init__(self, app):
-        super(KeeningCmd, self).__init__()
+        super(KeeningCmd, self).__init__(app)
         self.app = app
         self.backend = app.backend
         print("-" * 40 + "\nKeening Command Line Interface\n" + "-" * 40)

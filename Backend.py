@@ -18,14 +18,16 @@ class Backend(QtCore.QObject):
     progressChange = QtCore.pyqtSignal(int, int)
 
     # signals related to data files
-    dataFilesChanged = QtCore.pyqtSignal(dict)
-    updateDataFiles = QtCore.pyqtSignal()
+    modSetupChanged = QtCore.pyqtSignal(list)
 
     def __init__(self, app):
-        super(Backend, self).__init__()
+        super(Backend, self).__init__(app)
         self.app = app
-        self.ptm = PathManager.PathManager()
+        self.ptm = PathManager.PathManager(
+            self
+        )
         self.lgm = LogManager.LogManager(
+            self,
             self.app,
             self.ptm.getPath("Keening.log")
         )

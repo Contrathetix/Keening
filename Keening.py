@@ -13,7 +13,7 @@ class Keening(QtWidgets.QApplication):
         super(Keening, self).__init__(argv)
         self.backend = Backend.Backend(self)
         if len(argv) < 2:
-            self.widget = KeeningWidget.KeeningGui(self)
+            self.gui = KeeningWidget.KeeningGui(self)
         else:
             if "-info" in argv:
                 self.info()

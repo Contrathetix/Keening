@@ -10,14 +10,14 @@ class LogManager(QtCore.QObject):
 
     updateWidget = QtCore.pyqtSignal(list)
 
-    def __init__(self, app, filePath):
-        super(LogManager, self).__init__()
+    def __init__(self, backend, app, filePath):
+        super(LogManager, self).__init__(backend)
         self.logList = []
         self.widget = LogManagerWidget.LogList(self)
         app.aboutToQuit.connect(lambda: self.dumpLog(filePath))
 
     def log(self, src, msgType, args):
-        item = LogManager.LogItem(src, msgType, args)
+        item = LogManager.LogItem(self, src, msgType, args)
         self.logList.append(item)
         self.updateWidget.emit(self.logList)
 
@@ -28,7 +28,7 @@ class LogManager(QtCore.QObject):
 
     class LogItem(QtWidgets.QTreeWidgetItem):
 
-        def __init__(self, sourceModule, msgType, msg):
+        def __init__(self, logManager, sourceModule, msgType, msg):
             super(LogManager.LogItem, self).__init__()
             self.time = datetime.datetime.now()
             self.source = sourceModule

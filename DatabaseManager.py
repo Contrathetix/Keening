@@ -7,7 +7,7 @@ import sqlite3
 class DatabaseManager(QtCore.QObject):
 
     def __init__(self, backend, dbPath, sqlPath):
-        super(DatabaseManager, self).__init__()
+        super(DatabaseManager, self).__init__(backend)
         self.backend = backend
         self.conn = None
         self.cursor = None

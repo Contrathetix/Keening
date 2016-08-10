@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import PyQt5.QtWidgets as QtWidgets
-# import PyQt5.QtCore as QtCore
 import PyQt5.Qt as Qt
 
 

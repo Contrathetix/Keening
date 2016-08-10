@@ -7,8 +7,8 @@ import PyQt5.QtCore as QtCore
 
 class PathManager(QtCore.QObject):
 
-    def __init__(self):
-        super(PathManager, self).__init__()
+    def __init__(self, backend):
+        super(PathManager, self).__init__(backend)
 
     def getResource(self, fileName, make=False, toString=True):
         try:
