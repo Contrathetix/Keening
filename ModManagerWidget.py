@@ -2,43 +2,36 @@
 
 import PyQt5.QtWidgets as QtWidgets
 import PyQt5.QtCore as QtCore
-import PyQt5.QtGui as QtGui
 import PyQt5.Qt as Qt
 
 
 class ModList(QtWidgets.QTreeWidget):
 
-    itemDropped = QtCore.pyqtSignal()
+    itemDropped = QtCore.pyqtSignal(QtWidgets.QTreeWidgetItem, int)
 
     def __init__(self, modManager):
         super(ModList, self).__init__()
         self.setRootIsDecorated(False)
         self.setAlternatingRowColors(True)
-        # self.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
-        # self.setHeaderLabels(self.main.modManager.getModInfoHeaders())
+        self.setUniformRowHeights(True)
         self.setDragEnabled(True)
         self.setAcceptDrops(True)
+        self.setSortingEnabled(True)
+        self.setDragDropMode(QtWidgets.QAbstractItemView.DragDrop)
         self.setHorizontalScrollBarPolicy(Qt.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.Qt.ScrollBarAlwaysOn)
-        self.itemChanged.connect(modManager.widgetItemChanged)
-        modManager.updateWidget.connect(self.setMods)
+        self.setHeaderLabels(modManager.Mod.columnHeaders)
+        self.header().setSortIndicator(self.columnCount() - 1, Qt.Qt.AscendingOrder)
+        self.header().setSortIndicatorShown(True)
+        self.header().setStretchLastSection(False)
+        self.header().setSectionResizeMode(0, self.header().Stretch)
 
     def dropEvent(self, event):
-        print(event.mimeData())
-        event.acceptProposedAction()
-        return
-        if (event.mimeData().hasFormat('application/x-icon-and-text')):
+        item = self.currentItem()
+        index = self.indexOfTopLevelItem(self.itemAt(self.mapFrom(self, event.pos())))
+        if index > -1:
+            self.itemDropped.emit(item, index)
             event.acceptProposedAction()
-            data = event.mimeData().data("application/x-icon-and-text")
-            stream = QtCore.QDataStream(data, QtCore.QIODevice.ReadOnly)
-            text = QtCore.QString()
-            icon = QtGui.QIcon()
-            stream >> text >> icon
-            item = QtGui.QTreeWidgetItem(self)
-            item.setText(0, text)
-            item.setIcon(0, icon)
-            self.addTopLevelItem(item)
-            self.itemDropped.emit()
         else:
             event.ignore()
 
@@ -46,10 +39,11 @@ class ModList(QtWidgets.QTreeWidget):
         print(oldItem, newItem)
 
     def setMods(self, modList):
-        self.clear()
+        [self.takeTopLevelItem(i) for i in range(0, self.topLevelItemCount())]
         if len(modList) > 0:
-            self.setHeaderLabels(modList[0].getColumnHeaders())
-            self.addTopLevelItems(modList)
-        for i in range(0, self.columnCount() - 1):
-            self.resizeColumnToContents(i)
-            self.header().resizeSection(i, self.header().sectionSize(i) + 80)
+            [self.addTopLevelItem(item) for item in modList]
+        header = self.header()
+        # for i in range(self.columnCount() - 1, 1):
+        #    self.resizeColumnToContents(i)
+        #    header.resizeSection(i, header.sectionSize(i) + 40)
+        self.sortItems(header.sortIndicatorSection(), header.sortIndicatorOrder())

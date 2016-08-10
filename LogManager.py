@@ -8,19 +8,18 @@ import LogManagerWidget
 
 class LogManager(QtCore.QObject):
 
-    updateLog = QtCore.pyqtSignal(list)
+    updateWidget = QtCore.pyqtSignal(list)
 
     def __init__(self, app, filePath):
         super(LogManager, self).__init__()
         self.logList = []
         self.widget = LogManagerWidget.LogList(self)
-        self.updateLog.connect(self.widget.updateItems)
         app.aboutToQuit.connect(lambda: self.dumpLog(filePath))
 
     def log(self, src, msgType, args):
         item = LogManager.LogItem(src, msgType, args)
         self.logList.append(item)
-        self.updateLog.emit(self.logList)
+        self.updateWidget.emit(self.logList)
 
     def dumpLog(self, filePath):
         with open(filePath, "w", encoding="utf-8") as file:
@@ -50,7 +49,7 @@ class LogManager(QtCore.QObject):
             return ["info", "exception", "error"][self.msgType]
 
         def timeString(self):
-            return self.time.strftime("%Y-%m-%d %H:%m:%S")
+            return self.time.strftime("%Y-%m-%d %H:%M:%S:%f")[:-4]
 
         def sourceName(self):
             return self.source.__class__.__name__

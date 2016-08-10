@@ -2,18 +2,24 @@
 
 import PyQt5.QtCore as QtCore
 import shutil
+import sys
 import LogManager
 import ModManager
 import PathManager
-import PluginManager
+import DataFilesManager
 import ConfigManager
 import DatabaseManager
 
 
 class Backend(QtCore.QObject):
 
-    progressChange = QtCore.pyqtSignal(int, int)
+    # gui-related signals
     interfaceLock = QtCore.pyqtSignal(bool)
+    progressChange = QtCore.pyqtSignal(int, int)
+
+    # signals related to data files
+    dataFilesChanged = QtCore.pyqtSignal(dict)
+    updateDataFiles = QtCore.pyqtSignal()
 
     def __init__(self, app):
         super(Backend, self).__init__()
@@ -36,12 +42,21 @@ class Backend(QtCore.QObject):
             self,
             self.cfm.pathModsChanged
         )
-        self.plm = PluginManager.PluginManager(
+        self.dfm = DataFilesManager.DataFilesManager(
             self
         )
 
-    def progress(self, current, maximum):
+    def exit(self):
+        sys.exit(0)
+
+    def setInterfaceLocked(self, isLocked):
+        self.interfaceLock.emit(isLocked)
+
+    def setProgress(self, current, maximum):
         self.progressChange.emit(current, maximum)
+
+    def progressWidget(self):
+        return self.pgb
 
     def widgetLog(self):
         return self.lgm.widget
@@ -49,8 +64,8 @@ class Backend(QtCore.QObject):
     def widgetMods(self):
         return self.mdm.widget
 
-    def widgetPlugins(self):
-        return self.plm.widget
+    def widgetData(self):
+        return self.dfm.widget
 
     def log(self, src, i, msg):
         self.lgm.log(src, i, msg)
@@ -82,23 +97,28 @@ class Backend(QtCore.QObject):
     def removeMods(self, modNames):
         self.dbm.removeMods(modNames)
 
-    def addNewMod(self, modName, index):
-        self.dbm.addNewMod(modName, index)
+    def addNewMods(self, mods):
+        self.dbm.addNewMods(mods)
 
     def setModName(self, oldName, newName):
+        if oldName == newName:
+            return
         try:
-            mods = self.ptm.getPathMods()
+            mods = self.cfm.getPathMods()
             src = self.ptm.getPath([mods, oldName], toString=False)
             dst = self.ptm.getPath([mods, newName], toString=False)
             if dst.exists():
                 Exception("name already in use: \"" + str(newName) + "\"")
-            shutil.move(src, dst)
+            shutil.move(str(src), str(dst))
             self.dbm.setModAttribute(oldName, "name", newName)
         except Exception as exc:
-            self.lm.log(self, 1, str(exc))
+            self.lgm.log(self, 1, str(exc))
+
+    def setModActive(self, modName, isActive):
+        self.dbm.setModAttribute(modName, "active", isActive)
 
     def setModVersion(self, modName, newVersion):
         self.dbm.setModAttribute(modName, "version", newVersion)
 
-    def setModIndex(self, modName, newIndex):
-        self.dbm.setModAttribute(modName, "index", newIndex)
+    def setModIndexes(self, tupleList):
+        self.dbm.setModIndexes(tupleList)

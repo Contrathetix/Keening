@@ -35,7 +35,6 @@ class ConfigManager(QtCore.QObject):
         try:
             self.backend.pathManager.makePath(self.getPathMods(), create=True)
             self.backend.pathManager.makePath(self.getPathGame(), create=True)
-            self.backend.pathManager.makePath(self.getPathData(), create=True)
         except Exception as exc:
             self.backend.log(self, 1, str(exc))
 
@@ -56,27 +55,8 @@ class ConfigManager(QtCore.QObject):
     def setPathGame(self, path):
         self.valueMap["sPathGame"] = self.main.pathManager.makePath(path, create=True)
 
-    def getPathData(self):
-        return self.valueMap["sPathData"]
-
-    def setPathData(self, path):
-        self.valueMap["sPathData"] = self.main.pathManager.makePath(path, create=True)
-
-    def getPathDataFiles(self, path):
+    def getPathData(self, path):
         return self.main.pathManager.makePath([self.getPathGame(), "Data Files"], create=True)
-
-    def getInstallOrder(self):
-        return self.getOrderFromFile("mods.txt")
-
-    def getLoadOrder(self):
-        return self.getOrderFromFile("plugins.txt")
-
-    def getOrderFromFile(self, fileName):
-        path = self.main.pathManager.makePath([self.getPathData(), fileName], create=True)
-        order = []
-        with open(path, "r", encoding="utf-8") as file:
-            order = [x.strip() for x in file.read().split("\n")]
-        return order
 
     def getValue(self, valueName):
         try:

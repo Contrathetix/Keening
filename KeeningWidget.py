@@ -2,7 +2,6 @@
 
 import PyQt5.Qt as Qt
 import PyQt5.QtGui as QtGui
-import PyQt5.QtCore as QtCore
 import PyQt5.QtWidgets as QtWidgets
 import time
 
@@ -15,24 +14,16 @@ class KeeningGui(QtWidgets.QMainWindow):
         self.app = app
         self.app.setStyle("fusion")
         self.backend = app.backend
-        self.backend.progressChange.connect(self.setProgress)
-        self.backend.interfaceLock.connect(self.setLocked)
-        self.guiBreather = KeeningGui.GuiBreather(app, 100)
         self.mainWidget = KeeningGui.MainWidget(self)
+        self.backend.interfaceLock.connect(self.mainWidget.setLocked)
+        self.backend.progressChange.connect(self.mainWidget.setProgress)
         self.resize(self.backend.getGuiSize())
         self.setWindowTitle("Keening")
         self.setWindowIcon(QtGui.QIcon(self.backend.getResource("icon.png")))
         self.setCentralWidget(self.mainWidget)
-        self.setProgress(1, 2)
         time.sleep(1)
         splash.close()
         self.show()
-
-    def setProgress(self, maxProgress, currentProgress):
-        self.mainWidget.setProgress(maxProgress, currentProgress)
-
-    def setLocked(self, widget, locked):
-        self.mainWidget.setLocked(widget, locked)
 
     class Splash(QtWidgets.QSplashScreen):
 
@@ -43,34 +34,22 @@ class KeeningGui(QtWidgets.QMainWindow):
             )
             self.show()
 
-    class GuiBreather(QtCore.QThread):
-
-        def __init__(self, app, updateInterval):
-            super(KeeningGui.GuiBreather, self).__init__()
-            self.updateInterval = updateInterval
-            app.aboutToQuit.connect(self.quit)
-            self.start()
-
-        def run(self):
-            while True:
-                QtWidgets.QApplication.processEvents()
-                self.sleep(self.updateInterval)
-
     class MainWidget(QtWidgets.QWidget):
 
         def __init__(self, main):
             super(KeeningGui.MainWidget, self).__init__()
             self.main = main
             self.backend = self.main.backend
-            self.progressBar = QtWidgets.QProgressBar(self)
             self.widgetLog = self.backend.widgetLog()
             self.widgetMods = self.backend.widgetMods()
-            self.widgetPlugins = self.backend.widgetPlugins()
+            self.widgetPlugins = self.backend.widgetData()
+            self.progressBar = KeeningGui.ProgressWidget()
             # self.launcherList = KgWidgets.LauncherDropdown()
             # self.launcherList.setMinimumHeight(30)
-            # self.launcherButton = QtWidgets.QPushButton(
-            #     QtGui.QIcon(main.pathManager.resolveResource("btnlaunch.png")), None
-            # )
+            self.launcherButton = QtWidgets.QPushButton(
+                QtGui.QIcon(self.backend.getResource("btnlaunch.png")), None
+            )
+            self.launcherButton.clicked.connect(lambda: self.backend.updateDataFiles.emit())
             # self.launcherButton.setMinimumHeight(30)
 
             # right hand side widgets
@@ -79,7 +58,7 @@ class KeeningGui(QtWidgets.QMainWindow):
             layout.setColumnStretch(0, 10)
             layout.setColumnStretch(1, 1)
             # layout.addWidget(self.launcherList, 0, 0, 1, 1)
-            # layout.addWidget(self.launcherButton, 0, 1, 1, 1)
+            layout.addWidget(self.launcherButton, 0, 1, 1, 1)
             layout.addWidget(self.widgetPlugins, 1, 0, 1, 2)
             rightPane = QtWidgets.QWidget()
             rightPane.setLayout(layout)
@@ -128,20 +107,24 @@ class KeeningGui(QtWidgets.QMainWindow):
             vbox.addWidget(self.progressBar)
             self.setLayout(vbox)
 
-        def resolveResource(self, name):
-            return self.main.resolveResource(name)
-
-        def setLocked(self, widget, lock):
-            self.activeWidget = widget
+        def setLocked(self, lock):
             self.setDisabled(lock)
             self.toolbar.setDisabled(lock)
-            QtWidgets.QApplication.processEvents()
 
-        def setProgress(self, maxProgress, currentProgress):
-            try:
-                self.progressBar.setMaximum(maxProgress)
-                self.progressBar.setValue(currentProgress)
-                if (currentProgress >= maxProgress):
-                    self.progressBar.setDisabled(True)
-            except Exception:
-                pass
+        def setProgress(self, c, m):
+            self.progressBar.setProgress(c, m)
+
+    class ProgressWidget(QtWidgets.QProgressBar):
+
+        def __init__(self):
+            super(KeeningGui.ProgressWidget, self).__init__()
+            self.setRange(0, 1)
+            self.setValue(0)
+            self.setDisabled(True)
+
+        def setProgress(self, _cur, _max):
+            isDone = (_cur >= _max)
+            self.setDisabled(isDone)
+            if _max != self.maximum():
+                self.setRange(0, _max)
+            self.setValue(_cur)

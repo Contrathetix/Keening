@@ -42,14 +42,12 @@ class DatabaseManager(QtCore.QObject):
         self.backend.log(self, 0, "Sql parsing complete")
 
     def getModNames(self):
-        names = []
         try:
             self.cursor.execute("SELECT name FROM Mod ORDER BY ind DESC;")
-            names = list(self.cursor.fetchall())
-            print("mod names -->", names)
+            return [i[0] for i in list(self.cursor.fetchall())]
         except Exception as exc:
             self.backend.log(self, 1, str(exc))
-        return names
+            return []
 
     def getModInfo(self):
         info = {}
@@ -61,11 +59,13 @@ class DatabaseManager(QtCore.QObject):
             self.backend.log(self, 1, str(exc))
         return info
 
-    def addNewMod(self, modName, index):
+    def addNewMods(self, mods):
         try:
-            self.cursor.execute(
-                "INSERT INTO Mod (name, ind) VALUES (?, ?);", modName, index
-            )
+            for t in mods:
+                self.cursor.execute(
+                    "INSERT INTO Mod (name, ind) VALUES (?, ?);",
+                    t
+                )
             self.conn.commit()
         except Exception as exc:
             self.conn.rollback()
@@ -74,15 +74,17 @@ class DatabaseManager(QtCore.QObject):
     def removeMods(self, modNames):
         try:
             for name in modNames:
-                self.cursor.execute("DELETE FROM Mod WHERE name=?;", name)
+                self.cursor.execute("DELETE FROM Mod WHERE name=?;", [name])
             self.conn.commit()
         except Exception as exc:
             self.backend.log(self, 1, str(exc))
 
     def setModAttribute(self, modName, attribute, newValue):
         try:
-            s = "UPDATE Mod SET {} = ? WHERE name = ?;".format(attribute)
-            self.cursor.execute(s, newValue, modName)
+            self.cursor.execute(
+                "UPDATE Mod SET {} = ? WHERE name = ?;".format(attribute),
+                [newValue, modName]
+            )
             self.conn.commit()
         except Exception as exc:
             self.conn.rollback()
@@ -90,10 +92,23 @@ class DatabaseManager(QtCore.QObject):
 
     def getModAttribute(self, modName, attribute):
         try:
-            s = "SELECT {} FROM Mod WHERE name = ?;".format(attribute)
-            self.cursor.execute(s, modName)
+            self.cursor.execute(
+                "SELECT {} FROM Mod WHERE name = ?;".format(attribute),
+                [modName]
+            )
             return self.cursor.fetchone()[0]
         except Exception as exc:
             self.conn.rollback()
             self.backend.log(self, 1, str(exc))
             return None
+
+    def setModIndexes(self, tupleList):
+        try:
+            for t in tupleList:
+                self.cursor.execute(
+                    "UPDATE Mod SET ind = ? WHERE name = ?;", t
+                )
+            self.conn.commit()
+        except Exception as exc:
+            self.conn.rollback()
+            self.backend.log(self, 1, str(exc))
