@@ -90,19 +90,14 @@ class Backend(QtCore.QObject):
     def getGuiSize(self):
         return self.cfm.getGuiSize()
 
-    def getModNames(self):
-        return self.dbm.getModNames()
+    def addInstallers(self, nameList):
+        self.dbm.addInstallers(nameList)
 
-    def getModInfo(self):
-        return self.dbm.getModInfo()
-
-    def removeMods(self, modNames):
-        self.dbm.removeMods(modNames)
-
-    def addNewMods(self, mods):
-        self.dbm.addNewMods(mods)
+    def getInstallers(self):
+        return self.dbm.getInstallers()
 
     def setModName(self, oldName, newName):
+        # print("rename", oldName, "-->", newName)
         if oldName == newName:
             return
         try:
@@ -112,15 +107,24 @@ class Backend(QtCore.QObject):
             if dst.exists():
                 Exception("name already in use: \"" + str(newName) + "\"")
             shutil.move(str(src), str(dst))
-            self.dbm.setModAttribute(oldName, "name", newName)
+            self.dbm.setModName(oldName, newName)
         except Exception as exc:
             self.lgm.log(self, 1, str(exc))
 
+    def getModActive(self, modName):
+        return self.dbm.getModActive(modName)
+
     def setModActive(self, modName, isActive):
-        self.dbm.setModAttribute(modName, "active", isActive)
+        self.dbm.setModActive(modName, isActive)
+
+    def getModVersion(self, modName):
+        return self.dbm.getModVersion(modName)
 
     def setModVersion(self, modName, newVersion):
-        self.dbm.setModAttribute(modName, "version", newVersion)
+        self.dbm.setModVersion(modName, newVersion)
 
-    def setModIndexes(self, tupleList):
-        self.dbm.setModIndexes(tupleList)
+    def getModIndex(self, modName):
+        return self.dbm.getModIndex(modName)
+
+    def setModIndex(self, modName, newIndex):
+        self.dbm.setModIndex(modName, newIndex)

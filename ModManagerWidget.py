@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import PyQt5.QtWidgets as QtWidgets
-import PyQt5.QtCore as QtCore
 import PyQt5.Qt as Qt
 
 
@@ -33,8 +32,6 @@ class ModManagerWidget(QtWidgets.QWidget):
 
 class ModList(QtWidgets.QTreeWidget):
 
-    itemDropped = QtCore.pyqtSignal(QtWidgets.QTreeWidgetItem, int)
-
     def __init__(self, modManager):
         super(ModList, self).__init__()
 
@@ -43,40 +40,68 @@ class ModList(QtWidgets.QTreeWidget):
         self.setAcceptDrops(True)
         self.setDragDropMode(QtWidgets.QAbstractItemView.DragDrop)
 
+        # signal connections
+        self.itemChanged.connect(self.itemChangeHandler)
+
         # visual changes
         self.setRootIsDecorated(False)
         self.setUniformRowHeights(True)
+        self.setSortingEnabled(False)
         self.setAlternatingRowColors(True)
         self.setVerticalScrollBarPolicy(Qt.Qt.ScrollBarAlwaysOn)
         self.setHorizontalScrollBarPolicy(Qt.Qt.ScrollBarAlwaysOff)
 
         # headers and sorting
         header = self.header()
-        self.setSortingEnabled(True)
-        header.setSortIndicatorShown(True)
-        header.setSortIndicator(self.columnCount() - 1, Qt.Qt.AscendingOrder)
         header.setStretchLastSection(False)
         header.setSectionResizeMode(0, header.Stretch)
+        self.setSorting(True)
 
     def dropEvent(self, event):
-        item = self.currentItem()
-        index = self.indexOfTopLevelItem(self.itemAt(self.mapFrom(self, event.pos())))
-        if index > -1:
-            self.itemDropped.emit(item, index)
-            event.acceptProposedAction()
-        else:
+        try:
+            item = self.currentItem()
+            index = self.indexOfTopLevelItem(self.itemAt(self.mapFrom(self, event.pos())))
+            print(str(item), index)
+            if index > -1:
+                item.setIndex(index)
+                for i in range(index, self.topLevelItemCount()):
+                    self.topLevelItem(i).setIndex(i + 1, dbUpdate=False)
+                self.sort()
+                event.acceptProposedAction()
+            else:
+                raise Exception()
+        except Exception:
             event.ignore()
+
+    def itemChangeHandler(self, item, column):
+        item.newColumnValue(column, item.text(column))
+
+    def setSorting(self, enabled):
+        header = self.header()
+        self.setSortingEnabled(enabled)
+        header.setSortIndicatorShown(enabled)
+        if enabled:
+            self.sortByColumn(self.columnCount() - 1, Qt.Qt.AscendingOrder)
+            self.sortItems(header.sortIndicatorSection(), header.sortIndicatorOrder())
 
     def onSelectionChanged(self, oldItem, newItem):
         print(oldItem, newItem)
 
-    def setMods(self, modList):
-        [self.takeTopLevelItem(i) for i in range(0, self.topLevelItemCount())]
-        if len(modList) > 0:
-            self.setHeaderLabels(modList[0].columnHeaders())
+    def newHeaderLabels(self, labels):
+        self.setHeaderLabels(labels)
+        self.header().setSortIndicator(
+            self.columnCount() - 1,
+            self.header().sortIndicatorOrder()
+        )
+
+    def newItems(self, modList):
+        try:
+            self.setSorting(False)
+            [self.takeTopLevelItem(i) for i in range(0, self.topLevelItemCount())]
             [self.addTopLevelItem(item) for item in modList]
-        header = self.header()
-        self.sortItems(header.sortIndicatorSection(), header.sortIndicatorOrder())
+            self.setSorting(True)
+        except Exception:
+            pass
 
 
 class SidePanel(QtWidgets.QWidget):
@@ -88,15 +113,24 @@ class SidePanel(QtWidgets.QWidget):
         self.nameWidget = QtWidgets.QLabel("-", self)
         self.sizeWidget = QtWidgets.QLabel("-", self)
         self.numfWidget = QtWidgets.QLabel("-", self)
+
+        # subpackage tab
+        self.subpWidget = SubpackageWidget()
+        self.subpWidget.setAlternatingRowColors(True)
+
+        # installed files listing widget
         self.fileWidget = QtWidgets.QListWidget(self)
         self.fileWidget.setAlternatingRowColors(True)
+
+        # conflict lose lister widget
         self.loseWidget = QtWidgets.QListWidget(self)
         self.loseWidget.setAlternatingRowColors(True)
+
+        # conflict win list widget
         self.winsWidget = QtWidgets.QListWidget(self)
         self.winsWidget.setAlternatingRowColors(True)
-        self.subpWidget = SubpackageWidget()
 
-        # top layout
+        # top widget
         self.grid = QtWidgets.QGridLayout(self)
         self.grid.setContentsMargins(0, 0, 0, 0)
         self.grid.setColumnStretch(0, 1)
@@ -127,11 +161,11 @@ class SidePanel(QtWidgets.QWidget):
         self.setLayout(self.vbox)
 
     def updateInfo(self, mod, old):
-        self.nameWidget.setText(mod.name())
+        self.nameWidget.setText(mod.getName())
         # self.sizeWidget.setText(str(mod.size()))
-        self.numfWidget.setText(str(mod.fileCount()))
+        self.numfWidget.setText(str(mod.getFileCount()))
         self.fileWidget.clear()
-        self.fileWidget.addItems(mod.relativeFiles())
+        self.fileWidget.addItems(mod.getRelativeFiles())
 
 
 class SubpackageWidget(QtWidgets.QListWidget):

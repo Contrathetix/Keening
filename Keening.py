@@ -4,7 +4,7 @@ import PyQt5.QtWidgets as QtWidgets
 import sys
 import Backend
 import KeeningCmd
-import KeeningWidget
+import KeeningGui
 
 
 class Keening(QtWidgets.QApplication):
@@ -13,7 +13,7 @@ class Keening(QtWidgets.QApplication):
         super(Keening, self).__init__(argv)
         self.backend = Backend.Backend(self)
         if len(argv) < 2:
-            self.gui = KeeningWidget.KeeningGui(self)
+            self.gui = KeeningGui.KeeningGui(self)
         else:
             if "-info" in argv:
                 self.info()
