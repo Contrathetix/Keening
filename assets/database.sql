@@ -1,55 +1,32 @@
-PRAGMA FOREIGN_KEYS = on;
-
-CREATE TABLE Mod (
-	"id" INTEGER UNIQUE DEFAULT 0,
-
+CREATE TABLE Mods (
 	"name" VARCHAR(255) UNIQUE NOT NULL,
-	"version" VARCHAR(15) DEFAULT '1.0.0.0',
+	"version" VARCHAR(15) DEFAULT 'undef',
 	"active" BOOLEAN DEFAULT 0,
-	"index" INTEGER UNIQUE DEFAULT 0,
+	"index" INTEGER DEFAULT 0,
 
-	CHECK ("id" > -1 AND "index" > -1),
+	CHECK ("index" > -1),
 
-	PRIMARY KEY ("id")
+	PRIMARY KEY ("name")
 );
 
-CREATE TABLE Plugin (
-	"mod" INTEGER DEFAULT 0,
-	"name" VARCHAR(255) DEFAULT 'undefined',
-
+CREATE TABLE Plugins (
+	"name" VARCHAR(255) UNIQUE NOT NULL,
 	"active" BOOLEAN DEFAULT 0,
-	"index" INTEGER UNIQUE DEFAULT 0,
+	"index" INTEGER DEFAULT 0,
 
-	CHECK ("index" > -1 AND "index" < 256),
+	CHECK ("index" > -1),
 
-	FOREIGN KEY ("mod") REFERENCES Mod ("id") ON DELETE CASCADE,
-	PRIMARY KEY ("mod", "name")
+	PRIMARY KEY ("name")
 );
 
-CREATE VIEW Installers AS
-	SELECT "name", "version", "active", "index"
-	FROM Mod
-	ORDER BY "index" ASC;
+CREATE TABLE Preferences (
+	"key" VARCHAR(15) NOT NULL,
+	"value" VARCHAR(511) DEFAULT 'undef',
 
-CREATE VIEW InstalledMods AS
-	SELECT "name"
-	FROM Mod
-	WHERE Mod."active" = 1
-	ORDER BY "index" ASC;
+	PRIMARY KEY("key")
+);
 
-CREATE VIEW Plugins AS
-	SELECT Plugin."name", Plugin."index", Plugin."mod"
-	FROM Plugin
-	INNER JOIN Mod ON Plugin."mod" = Mod."id"
-	WHERE Mod."active" = 1
-	ORDER BY Plugin."index" ASC;
-
-CREATE VIEW InstalledPlugins AS
-	SELECT Plugin."name"
-	FROM Plugin
-	INNER JOIN Mod ON Plugin."mod" = Mod."id"
-	WHERE Mod."active" = 1 AND Plugin."active" = 1
-	ORDER BY Plugin."index" ASC;
-
-
-CREATE UNIQUE INDEX ind_mod_name ON Mod("name");
+INSERT INTO Preferences ("key", "value") VALUES ('guiWidth', '1000');
+INSERT INTO Preferences ("key", "value") VALUES ('guiHeight', '600');
+INSERT INTO Preferences ("key", "value") VALUES ('pathGame', 'game');
+INSERT INTO Preferences ("key", "value") VALUES ('pathMods', 'mods');

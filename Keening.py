@@ -1,39 +1,100 @@
 # -*- coding: utf-8 -*-
 
 import PyQt5.QtWidgets as QtWidgets
+import PyQt5.QtGui as QtGui
+import PyQt5.Qt as Qt
 import sys
-import Backend
-import KeeningCmd
-import KeeningGui
+import Log
+import Path
+import Mods
+import Preferences
+import Database
 
 
 class Keening(QtWidgets.QApplication):
 
     def __init__(self, argv):
         super(Keening, self).__init__(argv)
-        self.backend = Backend.Backend(self)
-        if len(argv) < 2:
-            self.gui = KeeningGui.KeeningGui(self)
-        else:
-            if "-info" in argv:
-                self.info()
-            elif "-cmd" in argv:
-                KeeningCmd.KeeningCmd(self)
-            elif "-launch" in argv:
-                app = argv[argv.index("-launch") + 1]
-                print("-----> launch", app)
-            else:
-                self.info()
-            self.backend.exit()
+        self._log = Log.Log(self)
+        self._path = Path.Path(self)
+        self._database = Database.Database(self)
+        self._preferences = Preferences.Preferences(self)
+        self._mods = Mods.Mods(self)
+        self._gui = Keening.Gui(self)
 
-    def info(self):
-        usage = [
-            "Usage:",
-            "\t-info\t\tshow this and exit",
-            "\t-cmd\t\topen command line interface",
-            "\t-launch <exe>\tlaunch a program"
-        ]
-        [print("\t" + u) for u in usage]
+    def database(self):
+        return self._database
+
+    def preferences(self):
+        return self._preferences
+
+    def path(self):
+        return self._path
+
+    def gui(self):
+        return self._gui
+
+    def mods(self):
+        return self._mods
+
+    def log(self, src=None, num=None, msg=None):
+        if src or num or msg:
+            self._log.log(src, num, msg)
+        else:
+            return self._log
+
+    class Gui(QtWidgets.QMainWindow):
+
+        def __init__(self, app):
+            super(Keening.Gui, self).__init__()
+            self.app = app
+            self.app.setStyle("fusion")
+            self.resize(app.preferences().guiSize())
+            self.setWindowTitle("Keening")
+            self.setWindowIcon(QtGui.QIcon(app.path().asset("icon.png")))
+
+            # central widget + layout for it
+            self.widget = QtWidgets.QWidget(self)
+            self.layout = QtWidgets.QVBoxLayout(self.widget)
+
+            # widgets
+            self.progressbar = QtWidgets.QProgressBar(self.widget)
+            self.tabWidget = QtWidgets.QTabWidget(self.widget)
+            # self.tabWidget.addTab(QtWidgets.QWidget(), "Installers")
+            self.tabWidget.addTab(app.mods(), "Mods")
+            self.tabWidget.addTab(QtWidgets.QWidget(), "Plugins")
+            self.tabWidget.addTab(app.preferences(), "Preferences")
+
+            # vertical splitter
+            self.splitter = QtWidgets.QSplitter(Qt.Qt.Vertical, self.widget)
+            self.splitter.addWidget(self.tabWidget)
+            self.splitter.addWidget(app.log())
+            self.splitter.setStretchFactor(0, 3)
+            self.splitter.setStretchFactor(1, 1)
+
+            # layout and main widget
+            self.layout.addWidget(self.splitter)
+            self.layout.addWidget(self.progressbar)
+            self.widget.setLayout(self.layout)
+            self.setCentralWidget(self.widget)
+
+            # show the window
+            self.show()
+
+        def setProgress(self, current, maximum):
+            try:
+                if current < maximum:
+                    self.progressbar.setRange(0, maximum)
+                    self.progressbar.setValue(current)
+                    self.progressbar.setDisabled(False)
+                    self.widget.setDisabled(False)
+                else:
+                    self.progressbar.setRange(0, 0)
+                    self.progressbar.setValue(0)
+                    self.progressbar.setDisabled(True)
+                    self.widget.setDisabled(True)
+            except Exception:
+                pass
 
 
 if __name__ == "__main__":
