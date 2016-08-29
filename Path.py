@@ -2,7 +2,6 @@
 
 import PyQt5.QtCore as QtCore
 import pathlib
-import shutil
 import sys
 import os
 
@@ -43,14 +42,35 @@ class Path(QtCore.QObject):
             return ""
 
     def renameMod(self, oldName, newName):
-            src = self.mod(oldName)
-            dst = self.mod(newName)
-            if os.path.isdir(dst):
-                self.app.log(self, 2, 'rename target exists: ' + str(dst))
-                return False
-            try:
-                shutil.move(src, dst)
-                return True
-            except Exception as exc:
-                self.app.log(self, 1, str(exc))
-                return False
+        src = self.mod(oldName)
+        dst = self.mod(newName)
+        if os.path.isdir(dst):
+            self.app.log(self, 2, 'rename target exists: ' + str(dst))
+            return False
+        try:
+            os.rename(src, dst)
+            return True
+        except Exception as exc:
+            self.app.log(self, 1, str(exc))
+            return False
+
+    def getFiles(self, path, relative=False):
+        self.pathList = []
+        self.getFilesRecursive(path)
+        if relative:
+            self.pathList[:] = [os.path.relpath(p, path) for p in self.pathList]
+        return self.pathList
+
+    def getFilesRecursive(self, path):
+        for f in sorted(os.scandir(path), key=lambda e: e.inode()):
+            if f.is_dir():
+                self.getFilesRecursive(f.path)
+            else:
+                self.pathList.append(os.path.abspath(f.path))
+
+    def scandir(self, path):
+        if not os.path.isdir(path):
+            return []
+        else:
+            entries = os.scandir(path)
+            return sorted(entries, key=lambda e: e.inode(), reverse=False)

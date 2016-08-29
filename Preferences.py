@@ -91,3 +91,9 @@ class Preferences(QtWidgets.QWidget):
         except Exception:
             self.prefs["pathGame"] = "game"
             return self.app.path().make("game")
+
+    def pathData(self):
+        try:
+            return self.app.path().make([self.prefs["pathGame"], "Data Files"])
+        except Exception:
+            return self.app.path().make(["game", "Data Files"])

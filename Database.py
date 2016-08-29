@@ -13,10 +13,10 @@ class Database(QtCore.QObject):
         self.conn = None
         self.cursor = None
         try:
-            self.conn = sqlite3.connect('Keening.db')
+            self.conn = sqlite3.connect("Keening.db")
             self.cursor = self.conn.cursor()
-            self.parseSQL(self.app.path().asset('database.sql'))
-            self.app.log(self, 0, 'db connection ready')
+            self.parseSQL(self.app.path().asset("database.sql"))
+            self.app.log(self, 0, "db connection ready")
         except Exception as exc:
             self.app.log(self, 1, str(exc))
 
@@ -28,14 +28,14 @@ class Database(QtCore.QObject):
 
     def parseSQL(self, filePath):
         if not self.cursor or not self.conn:
-            self.app.log(self, 2, 'no db cursor, will not parse sql')
+            self.app.log(self, 2, "no db cursor, will not parse sql")
         else:
-            self.app.log(self, 0, 'sql parsing from "' + str(filePath) + '"')
-            regex = re.compile('((.*) already exists|unique(.*))', re.IGNORECASE)
+            self.app.log(self, 0, "sql parsing from \"" + str(filePath) + "\"")
+            regex = re.compile("((.*) already exists|unique(.*))", re.IGNORECASE)
             with open(filePath, encoding='utf-8') as file:
-                comms = [c.strip() for c in file.read().split(';')]
-                comms[:] = [c.replace('\t', '') for c in comms if len(c) > 0]
-                comms[:] = [c.replace('\n', ' ') + ';' for c in comms]
+                comms = [c.strip() for c in file.read().split(";")]
+                comms[:] = [c.replace("\t", "") for c in comms if len(c) > 0]
+                comms[:] = [c.replace("\n", " ") + ";" for c in comms]
                 for c in comms:
                     try:
                         self.cursor.execute(c)
@@ -44,10 +44,10 @@ class Database(QtCore.QObject):
                             continue
                         self.app.log(self, 1, str(exc))
                 self.conn.commit()
-            self.app.log(self, 0, 'sql parsing complete')
+            self.app.log(self, 0, "sql parsing complete")
 
     def argGenerator(self, items):
-        items = [i if type(i) in [list, tuple] else list(i) for i in items]
+        items = [i if type(i) in [list, tuple] else [i] for i in items]
         for item in items:
             yield(item)
 
@@ -62,7 +62,7 @@ class Database(QtCore.QObject):
             self.conn.commit()
         except Exception as exc:
             self.conn.rollback()
-            self.app.log(self, 1, 'setPrefs, ' + str(exc))
+            self.app.log(self, 1, "setPrefs, " + str(exc))
 
     def getPreferences(self):
         try:
@@ -76,7 +76,7 @@ class Database(QtCore.QObject):
             return {}
 
     def setMods(self, names):
-        self.setItems('Mods', names)
+        self.setItems("Mods", names)
 
     def getMods(self):
         mods = {
@@ -89,6 +89,9 @@ class Database(QtCore.QObject):
         except Exception as exc:
             self.app.log(self, 1, "getPrefs, " + str(exc))
         return mods
+
+    def getInstalledMods(self):
+        return [m[0] for m in self.getMods()["data"] if m[3]]
 
     def setPlugins(self, names):
         self.setItems("Plugins", names)
@@ -125,7 +128,7 @@ class Database(QtCore.QObject):
             self.conn.commit()
         except Exception as exc:
             self.conn.rollback()
-            self.backend.log(self, 1, str(exc))
+            self.app.log(self, 1, str(exc))
         self.app.log(self, 0, "Updated table \"" + table + "\"")
 
     def setModIndexes(self, names):
@@ -144,7 +147,7 @@ class Database(QtCore.QObject):
             self.conn.commit()
         except Exception as exc:
             self.conn.rollback()
-            self.backend.log(self, 1, str(exc))
+            self.app.log(self, 1, str(exc))
         self.app.log(self, 0, "Updated indexes on \"" + table + "\"")
 
     def setModActive(self, name, active):
@@ -158,6 +161,7 @@ class Database(QtCore.QObject):
 
     def setModName(self, name, newName):
         if not self.app.path().renameMod(name, newName):
+            print("failed to rename")
             return
         self.setTableValue("Mods", "name", newName, "name", name)
 
@@ -189,4 +193,28 @@ class Database(QtCore.QObject):
             self.conn.commit()
         except Exception as exc:
             self.conn.rollback()
-            self.backend.log(self, 1, str(exc))
+            self.app.log(self, 1, str(exc))
+
+    def getApps(self):
+        try:
+            self.cursor.execute(
+                'SELECT "path" FROM Apps;'
+            )
+            return [t[0] for t in self.cursor.fetchall()]
+        except Exception as exc:
+            self.app.log(self, 1, str(exc))
+            return []
+
+    def setApps(self, newPaths):
+        try:
+            self.cursor.execute(
+                'DELETE FROM Apps;'
+            )
+            self.cursor.executemany(
+                'INSERT INTO Apps ("path") VALUES (?);',
+                self.argGenerator(newPaths)
+            )
+            self.conn.commit()
+        except Exception as exc:
+            self.conn.rollback()
+            self.app.log(self, 1, str(exc))

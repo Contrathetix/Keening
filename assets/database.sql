@@ -23,7 +23,13 @@ CREATE TABLE Preferences (
 	"key" VARCHAR(15) NOT NULL,
 	"value" VARCHAR(511) DEFAULT 'undef',
 
-	PRIMARY KEY("key")
+	PRIMARY KEY ("key")
+);
+
+CREATE TABLE Apps (
+	"path" VARCHAR(4095) UNIQUE NOT NULL,
+
+	PRIMARY KEY ("path")
 );
 
 INSERT INTO Preferences ("key", "value") VALUES ('guiWidth', '1000');
