@@ -1,12 +1,13 @@
 import os
 import PyQt5.QtCore as QtCore
+import modules.ModuleTemplate as ModuleTemplate
 
 
-class PathManager(QtCore.QObject):
+class PathManager(ModuleTemplate.ModuleTemplate):
 
     def __init__(self, parent=None):
-        super().__init__()
-        self.__parent = parent
+        super().__init__(parent)
+        self.method_register("path_get_paths", self.get_paths)
 
     def get_paths(self, start_path="."):
         self.__path_list = []
