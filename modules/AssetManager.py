@@ -1,7 +1,7 @@
 import os
 import PyQt5.QtGui as QtGui
 import PyQt5.QtCore as QtCore
-import modules.ModuleTemplate as ModuleTemplate
+import templates.ModuleTemplate as ModuleTemplate
 
 
 class AssetManager(ModuleTemplate.ModuleTemplate):

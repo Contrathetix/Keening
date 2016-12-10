@@ -1,11 +1,11 @@
 import PyQt5.QtCore as QtCore
+import templates.ModuleTemplate as ModuleTemplate
 
 
-class DataManager(QtCore.QObject):
+class DataManager(ModuleTemplate.ModuleTemplate):
 
     def __init__(self, parent=None):
-        super().__init__()
-        self.__parent = parent
+        super().__init__(parent)
 
     def set_modlist(self, new_list):
         pass

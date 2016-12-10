@@ -1,6 +1,6 @@
 import os
 import PyQt5.QtCore as QtCore
-import modules.ModuleTemplate as ModuleTemplate
+import templates.ModuleTemplate as ModuleTemplate
 
 
 class PathManager(ModuleTemplate.ModuleTemplate):

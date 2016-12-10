@@ -1,5 +1,7 @@
-import PluginTemplate
+import templates.PluginTemplate as PluginTemplate
 
 
 class Preferences(PluginTemplate.PluginTemplate):
-    pass
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
