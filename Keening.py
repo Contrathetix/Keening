@@ -1,19 +1,10 @@
-#!/usr/bin/python3
-
-import os
+# Python imports
 import sys
-import PyQt5.QtWidgets as QtWidgets
-import templates.KeeningTemplate as KeeningTemplate
+
+# Keening imports
+import Modules.ApplicationCore as ApplicationCore
 
 
-class Keening(KeeningTemplate.KeeningTemplate):
-
-    def __init__(self, app):
-        super().__init__(app)
-
-
-if __name__ == "__main__":
-    os.chdir("./Documents/Keening")
-    app = QtWidgets.QApplication(sys.argv)
-    gui = Keening(app)
+if __name__ == '__main__':
+    app = ApplicationCore.ApplicationCore(sys.argv)
     sys.exit(app.exec_())
