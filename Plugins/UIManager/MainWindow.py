@@ -1,14 +1,18 @@
+"""Application main window."""
+
 # PyQt5 import
 import PyQt5.QtGui as QtGui
 import PyQt5.QtWidgets as QtWidgets
 
 # Keening imports
-import Common.ConfigHandler as ConfigHandler
+import Common.PluginTemplate as PluginTemplate
 
 
 class MainWindow(QtWidgets.QMainWindow):
+    """MainWindow class for the application, contains all other UI elements."""
 
     def __init__(self, app):
+        """MainWindow init."""
         super().__init__()
         self.app = app
         self.config = ConfigHandler.ConfigHandler(self)
@@ -38,6 +42,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
     def closeEvent(self, event):
+        """Event received when the window is being closed."""
         currentSize = self.size()
         self.config.set('window_w', currentSize.width())
         self.config.set('window_h', currentSize.height())
@@ -47,7 +52,5 @@ class MainWindow(QtWidgets.QMainWindow):
         event.accept()
 
     def addTabWidget(self, newWidget, tabName):
+        """Add new tab to the main window tab widget."""
         self.tabHolder.addTab(newWidget, tabName)
-
-    def addToolBarWidget(self, newWidget, iconObject, toolTip):
-        pass
